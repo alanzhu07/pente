@@ -1,0 +1,8 @@
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: "pente-23a3f",
+    clientEmail: "foo@pente-23a3f.iam.gserviceaccount.com",
+    privateKey: "-----BEGIN PRIVATE KEY-----\nAIzaSyCjxc9o1Unj7bISbLYjQwPBQ35yApWe2q4\n-----END PRIVATE KEY-----\n"
+  }),
+  databaseURL: "https://pente-23a3f.firebaseio.com"
+});
