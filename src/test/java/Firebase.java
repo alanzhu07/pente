@@ -6,7 +6,7 @@ import org.junit.Test;
 public class Firebase{
 	@Test
 	public void run(){
-		String gradle="Gradle sucks";
+		//String gradle="Gradle sucks";
 		//
 		//
 		int boardSquares = 19;
@@ -25,6 +25,8 @@ public class Firebase{
 		//
 		
 		PenteFirebase penteFirebase=new PenteFirebase(board);
+		Runtime r=Runtime.getRuntime();
+		r.addShutdownHook(new FirebaseCleanupThread(penteFirebase));
 //		JOptionPane.showMessageDialog(null, penteFirebase.toString());
 //		board.setFirebase(penteFirebase);
 //		String s=penteFirebase.getMove(0, 1);

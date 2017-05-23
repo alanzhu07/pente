@@ -4,9 +4,7 @@
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.net.URL;
 
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -25,6 +23,7 @@ public class GameBoard extends JPanel implements MouseListener {
 	private static final long serialVersionUID = 2081894653079139310L;
 		private PenteFirebase firebase=null;
 		private JFrame frame;
+		private JFrame connectingFrame;
 		private int bWidthPixels;
 		private int bWidthSquares;
 		private int bSquareWidth;
@@ -63,14 +62,14 @@ public class GameBoard extends JPanel implements MouseListener {
 			board[bWidthSquares/2][bWidthSquares/2].setState(Main.BLACK); 
 			
 			//
-			URL iconURL = getClass().getResource("penteboard.png");
-			ImageIcon icon = new ImageIcon(iconURL);
-			frame.setIconImage(icon.getImage());
+//			URL iconURL = getClass().getResource("penteboard.png");
+//			ImageIcon icon = new ImageIcon(iconURL);
+//			frame.setIconImage(icon.getImage());
 			//
 			
 			String[] options={"White", "Black"};
 			int color=JOptionPane.showOptionDialog(null, "Choose Your Color", "Select an Option", JOptionPane.YES_NO_OPTION, 
-					JOptionPane.QUESTION_MESSAGE, icon, options, null);
+					JOptionPane.QUESTION_MESSAGE, null, options, null);
 			//if(color==0) JOptionPane.showMessageDialog(null, "Your Color is White");
 			//else JOptionPane.showMessageDialog(null, "Your Color is Black");
 			int ralphOption=JOptionPane.showConfirmDialog(null, "Do you want to play with Ralph?", "Select an Option",
@@ -110,7 +109,11 @@ public class GameBoard extends JPanel implements MouseListener {
 		
 		public void setFirebase(PenteFirebase fb){
 			if(!playingAgainstRalph){
-				JOptionPane.showMessageDialog(null, "connecting to firebase...");
+				connectingFrame = new JFrame ("Message");
+				connectingFrame.setSize(200, 200);
+				connectingFrame.setLocationRelativeTo(null);
+				connectingFrame.setVisible(true);
+				//JOptionPane.showMessageDialog(null, "connecting to firebase...");
 				fb.connect();
 				firebase=fb;
 				if(whitePlayer!=null) whitePlayer.updateFirebase(fb);
@@ -282,6 +285,10 @@ public class GameBoard extends JPanel implements MouseListener {
 		
 		public PenteFirebase getFirebase(){
 			return firebase;
+		}
+		
+		public JFrame getConnectingFrame(){
+			return connectingFrame;
 		}
 		
 		public int getCapture(int color){

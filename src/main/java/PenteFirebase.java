@@ -135,6 +135,7 @@ public class PenteFirebase{
 				public void onComplete(DatabaseError arg0, DatabaseReference arg1) {
 						b.setRoom(currentRoom.get());
 						ref.child("CurrentRoom").setValue(String.valueOf(currentRoom.get()));
+						b.getConnectingFrame().setVisible(false);
 						JOptionPane.showMessageDialog(null, "connected!");
 						b.setAvailable();
 						//b.listenForMove();
