@@ -2,13 +2,17 @@
 
 
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -16,7 +20,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class GameBoard extends JPanel implements MouseListener {
+public class GameBoard extends JPanel implements MouseListener, ActionListener{
 		public int room=0;
 		/**
 	 * 
@@ -47,6 +51,7 @@ public class GameBoard extends JPanel implements MouseListener {
 		
 		
 		public GameBoard (int bWPixels, int bWSquares, JFrame f) {
+			t.start();
 			frame=f;
 			bWidthPixels = bWPixels;
 			bWidthSquares = bWSquares;
@@ -374,6 +379,42 @@ public class GameBoard extends JPanel implements MouseListener {
 				}
 				
 			});
+		}
+		int TimePassed = 0;
+		Timer t = new Timer(10000, this);
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if(firebase != null){
+				if(currentTurn == firebase.getPlayerColor()){
+					if(TimePassed == 4){
+						JOptionPane.showMessageDialog(null, "Please Make a Move, Game Will End in 30 seconds if you do not make a move");
+					}else if(TimePassed >= 7){
+						String pc = "Black";
+						if(firebase.getPlayerColor() == PenteMain.WHITE){
+							pc = "White";
+						}
+						FireWrite(firebase.getRef().child(Integer.toString(firebase.getRoom())).child("Turns").child(pc),"quit");
+					}
+					else{
+						TimePassed++;
+					}
+				}else{
+					TimePassed = 0;
+				}
+			}
+		}
+		public void FireWrite(DatabaseReference dbr, String toWrite){
+			final AtomicBoolean done = new AtomicBoolean(false);
+			dbr.setValue(toWrite, 
+					new DatabaseReference.CompletionListener() {
+						
+						@Override
+						public void onComplete(DatabaseError arg0, DatabaseReference arg1) {
+							done.set(true);
+							// TODO Auto-generated method stub
+							
+						}
+					});while(!done.get());
 		}
 		
 
