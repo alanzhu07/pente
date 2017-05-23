@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,6 +25,8 @@ public class GameBoard extends JPanel implements MouseListener {
 		private PenteFirebase firebase=null;
 		private JFrame frame;
 		private JFrame connectingFrame;
+		private JFrame waiting;
+		private JDialog dialog;
 		private int bWidthPixels;
 		private int bWidthSquares;
 		private int bSquareWidth;
@@ -60,65 +63,76 @@ public class GameBoard extends JPanel implements MouseListener {
 				}
 			
 			board[bWidthSquares/2][bWidthSquares/2].setState(Main.BLACK); 
-			
-			//
-//			URL iconURL = getClass().getResource("penteboard.png");
-//			ImageIcon icon = new ImageIcon(iconURL);
-//			frame.setIconImage(icon.getImage());
-			//
-			
+		
+		}
+		
+		public void startGame(){
+			int color=firebase.getPlayerColor();
+			if (color==Main.BLACK){
+				JOptionPane.showMessageDialog(null, "Your Color is Black");
+				blackIsClicking=true;
+				blackPlayer=new Player(this, Main.BLACK, room, blackIsClicking);
+				whitePlayer=new Player(this, Main.WHITE, room, whiteIsClicking);
+				waiting=new JFrame("Message");
+				JOptionPane op = new JOptionPane("Waiting for Opponent...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION,
+						null, new Object[]{}, null);
+				waiting.add(op);
+				waiting.pack();
+				waiting.setLocationRelativeTo(null);
+				waiting.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+				waiting.setVisible(true);
+			} else if(color==Main.WHITE) {
+				JOptionPane.showMessageDialog(null, "Your Color is White");
+				whiteIsClicking=true;
+				blackPlayer=new Player(this, Main.BLACK, room, blackIsClicking);
+				whitePlayer=new Player(this, Main.WHITE, room, whiteIsClicking);
+			}
+			changeTurn();
+			addMouseListener(this);
+		}
+		
+		private void setRalph(){
+			playingAgainstRalph=true;
 			String[] options={"White", "Black"};
 			int color=JOptionPane.showOptionDialog(null, "Choose Your Color", "Select an Option", JOptionPane.YES_NO_OPTION, 
 					JOptionPane.QUESTION_MESSAGE, null, options, null);
-			//if(color==0) JOptionPane.showMessageDialog(null, "Your Color is White");
-			//else JOptionPane.showMessageDialog(null, "Your Color is Black");
-			int ralphOption=JOptionPane.showConfirmDialog(null, "Do you want to play with Ralph?", "Select an Option",
-					JOptionPane.YES_NO_OPTION);
-			
-			//BLACK
-			if(ralphOption==JOptionPane.YES_OPTION && color==0){
+			if (color==0) {
 				ralph=new Ralph(this, Main.BLACK);
 				ralphStoneColor=Main.BLACK;
-				playingAgainstRalph=true;
+				whiteIsClicking=true;
+				whitePlayer=new Player(this, Main.WHITE, room, whiteIsClicking);
 			} else {
-				if(color==1)
-					blackIsClicking=true;
-				blackPlayer=new Player(this, Main.BLACK, room, blackIsClicking);
-			}
-			
-			
-			
-			changeTurn();
-			
-			//WHITE
-			if(ralphOption==JOptionPane.YES_OPTION && color==1){
 				ralph=new Ralph(this, Main.WHITE);
 				ralphStoneColor=Main.WHITE;
-				playingAgainstRalph=true;
-			} else {
-				if(color==0)
-					whiteIsClicking=true;
-				whitePlayer=new Player(this, Main.WHITE, room, whiteIsClicking);
+				blackIsClicking=true;
+				blackPlayer=new Player(this, Main.BLACK, room, whiteIsClicking);
 			}
-			
+			changeTurn();
 			addMouseListener(this);
-			//listenForMove();
-			
 			
 		}
 		
 		public void setFirebase(PenteFirebase fb){
-			if(!playingAgainstRalph){
+			int ralphOption=JOptionPane.showConfirmDialog(null, "Do you want to play with Ralph?", "Select an Option",
+					JOptionPane.YES_NO_OPTION);
+			if(ralphOption==JOptionPane.NO_OPTION){
 				connectingFrame = new JFrame ("Message");
-				connectingFrame.setSize(200, 200);
+				JOptionPane op = new JOptionPane("Loading...", JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION,
+						null, new Object[]{}, null);
+				connectingFrame.add(op);
+				connectingFrame.pack();
 				connectingFrame.setLocationRelativeTo(null);
+				connectingFrame.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 				connectingFrame.setVisible(true);
 				//JOptionPane.showMessageDialog(null, "connecting to firebase...");
 				fb.connect();
 				firebase=fb;
 				if(whitePlayer!=null) whitePlayer.updateFirebase(fb);
 				if(blackPlayer!=null) blackPlayer.updateFirebase(fb);
-			} else setAvailable();
+			} else {
+				setRalph();
+				setAvailable();
+			}
 		}
 		
 		public void setAvailable(){
@@ -289,6 +303,14 @@ public class GameBoard extends JPanel implements MouseListener {
 		
 		public JFrame getConnectingFrame(){
 			return connectingFrame;
+		}
+		
+		public JFrame getWaitingFrame(){
+			return waiting;
+		}
+		
+		public JDialog getDialog(){
+			return dialog;
 		}
 		
 		public int getCapture(int color){

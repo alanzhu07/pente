@@ -17,6 +17,7 @@ public class PenteMain{
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(boardWidth, boardWidth+boardSquares);
+		frame.setLocationRelativeTo(null);
 
 		GameBoard board = new GameBoard(boardWidth, boardSquares, frame);
 		frame.add(board);

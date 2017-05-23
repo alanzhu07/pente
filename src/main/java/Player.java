@@ -75,8 +75,11 @@ public class Player{
 
 			@Override
 			public void onDataChange(DataSnapshot snapshot) {
+				String string=snapshot.getValue().toString();
+				if(string.equals("quit")){
+					JOptionPane.showMessageDialog(null, "Your opponent has quit, you win!");
+				}
 				if(gameboard.getTurn()==turn){
-					String string=snapshot.getValue().toString();
 					if(!string.equals("init")){
 						Square sq=firebase.toSquare(string);
 						gameboard.placeSquare(sq);

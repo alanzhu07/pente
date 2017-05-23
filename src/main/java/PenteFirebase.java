@@ -2,7 +2,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import com.google.firebase.FirebaseApp;
@@ -38,6 +41,9 @@ public class PenteFirebase{
 	private FirebaseDatabase database;
 	private DatabaseReference ref;
 	private final AtomicInteger currentRoom=new AtomicInteger(0);
+	private int color;
+	DatabaseReference roomRef;
+	String players;
 	
 	public PenteFirebase(GameBoard board){
 		b=board;
@@ -97,9 +103,52 @@ public class PenteFirebase{
 				read.set(true);
 			}
 		}); while(!read.get());
-		DatabaseReference roomRef = database.getReference().child("Rooms");
+		roomRef = database.getReference().child("Rooms");
+		players = FireRead(roomRef.child(String.valueOf(currentRoom.get())).child("Players"));
 		listen(roomRef, roomRef.child(String.valueOf(currentRoom.get())).child("Players"));
 		
+	}
+
+	public int getPlayerColor(){
+		if(players.equals("1")){
+			color = PenteMain.WHITE;
+		}else{
+			color = PenteMain.BLACK;
+			roomRef.child(String.valueOf(currentRoom.get())).child("Players").addValueEventListener(new ValueEventListener(){
+			@Override
+			 public void onDataChange(DataSnapshot dataSnapshot) {
+				//JOptionPane.showMessageDialog(null, "message");
+				if(dataSnapshot.getValue(String.class).equals("2")){
+					b.getWaitingFrame().setVisible(false);
+					b.setAvailable();
+				}
+		    }
+
+		    @Override
+		    public void onCancelled(DatabaseError databaseError) {
+		    }
+		});
+		}
+		return color;
+	}
+	
+	public String FireRead(DatabaseReference dbr){
+		final AtomicBoolean doneRead = new AtomicBoolean(false);
+		final AtomicReference<String> toReturn = new AtomicReference<String>("null");
+		dbr.addValueEventListener(new ValueEventListener() {
+			@Override
+			 public void onDataChange(DataSnapshot dataSnapshot) {
+				toReturn.set(dataSnapshot.getValue(String.class));
+				doneRead.set(true);
+				
+		    }
+
+		    @Override
+		    public void onCancelled(DatabaseError databaseError) {
+		        // ...
+		    }
+		});while(!doneRead.get());
+		return toReturn.get();
 	}
 	
 	private void listen(DatabaseReference ref1, DatabaseReference ref){
@@ -112,12 +161,10 @@ public class PenteFirebase{
 			public void onDataChange(DataSnapshot snapshot) {
 				//currentRoom.incrementAndGet();
 				int p=Integer.parseInt(snapshot.getValue().toString());
-				//JOptionPane.showMessageDialog(null, "players: "+p);
 				if (p>=2){
 					//JOptionPane.showMessageDialog(null, "room is full"+ref.getPath());
 					roomReset(currentRoom.incrementAndGet());
 					addPlayer(0, this, ref1.child(String.valueOf(currentRoom.get())).child("Players"));
-					//listen(ref1, ref1.child(String.valueOf(currentRoom.get())).child("Players"));
 				}
 				else addPlayer(p, this, ref);
 				
@@ -136,9 +183,9 @@ public class PenteFirebase{
 						b.setRoom(currentRoom.get());
 						ref.child("CurrentRoom").setValue(String.valueOf(currentRoom.get()));
 						b.getConnectingFrame().setVisible(false);
-						JOptionPane.showMessageDialog(null, "connected!");
-						b.setAvailable();
-						//b.listenForMove();
+						b.startGame();
+						//JOptionPane.showMessageDialog(null, "connected!");
+						if(color==PenteMain.WHITE) b.setAvailable();
 							}
 					});
 			playerRef.removeEventListener(listener);
@@ -150,11 +197,15 @@ public class PenteFirebase{
 	
 	public void closeRoom(){
 		System.out.println("closing room");
-
+		String turnString=null;
+		if(color==Main.BLACK) turnString="Black";
+		else if(color==Main.WHITE) turnString="White";
 		AtomicBoolean d=new AtomicBoolean(false);
 		if(currentRoom.get()==0) {
-			roomReset(0);
-			ref.child("Rooms").child("0").child("Players").setValue("0", new DatabaseReference.CompletionListener() {
+			//roomReset(0);
+			roomRef.child(String.valueOf(currentRoom.get())).child("Turns").child(turnString).setValue("quit");
+			roomRef.child(String.valueOf(currentRoom.get())).child("Turns").child(turnString).setValue("init");
+			roomRef.child("0").child("Players").setValue("0", new DatabaseReference.CompletionListener() {
 				
 				@Override
 				public void onComplete(DatabaseError arg0, DatabaseReference arg1) {
@@ -163,8 +214,9 @@ public class PenteFirebase{
 				}); while(!d.get());
 		}
 		else {
-			ref.child("Rooms").child(String.valueOf(currentRoom.get())).setValue(null);
-			ref.child("CurrentRoom").setValue(currentRoom.get()-1, new DatabaseReference.CompletionListener() {
+			roomRef.child(String.valueOf(currentRoom.get())).child("Turns").child(turnString).setValue("quit");
+			roomRef.child(String.valueOf(currentRoom.get())).child("Turns").child(turnString).setValue("init");
+			ref.child("CurrentRoom").setValue(currentRoom.get(), new DatabaseReference.CompletionListener() {
 			
 			@Override
 			public void onComplete(DatabaseError arg0, DatabaseReference arg1) {
